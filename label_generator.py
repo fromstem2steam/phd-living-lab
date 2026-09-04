@@ -53,5 +53,3 @@ def generate_lab_label(
     buf = io.BytesIO()
     image.save(buf, format="PNG")
     return buf.getvalue()
-
-
