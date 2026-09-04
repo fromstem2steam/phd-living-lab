@@ -1,16 +1,17 @@
+import streamlit as st
 from streamlit_autorefresh import st_autorefresh
+from supabase import create_client
 
 # Refresh every 5000 milliseconds (5 seconds)
 st_autorefresh(interval=5000, key="datarefresh")
 
-import streamlit as st
-from supabase import create_client
-
 st.set_page_config(page_title="Living Lab Café Kiosk", layout="wide")
+
 
 @st.cache_resource
 def init_supabase():
     return create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
+
 
 supabase = init_supabase()
 
@@ -46,6 +47,7 @@ if scanned_sku and "scanned_added" not in st.session_state:
         st.session_state.scanned_added = True
         st.toast(f"Added {r_item[0]['name']} via QR Code!")
 
+
 @st.fragment(run_every=5)
 def render_live_order_status(order_id):
     order = (
@@ -78,6 +80,7 @@ def render_live_order_status(order_id):
                     else:
                         cols[c - 1].markdown(f"⚪ Pod R{r}-C{c}")
 
+
 if st.session_state.active_order_id:
     render_live_order_status(st.session_state.active_order_id)
 else:
@@ -94,7 +97,11 @@ else:
             .data
         )
         for i in items:
-            c1, c2, c3 = st.columns([3, 1, 1])
+            c_img, c1, c2, c3 = st.columns([1, 3, 1, 1])
+            if i.get("image_url"):
+                c_img.image(i["image_url"], use_container_width=True)
+            else:
+                c_img.write("🍽️")
             c1.write(f"**{i['name']}** ({i['category']})")
             c2.write(f"€{i['price']:.2f}")
             if c3.button("Add", key=f"m_{i['id']}"):
@@ -117,7 +124,11 @@ else:
             .data
         )
         for r in r_items:
-            c1, c2, c3 = st.columns([3, 1, 1])
+            c_img, c1, c2, c3 = st.columns([1, 3, 1, 1])
+            if r.get("image_url"):
+                c_img.image(r["image_url"], use_container_width=True)
+            else:
+                c_img.write("🛍️")
             c1.write(f"**{r['name']}** (Stock: {r['stock_quantity']})")
             c2.write(f"€{r['price']:.2f}")
             if c3.button("Add", key=f"r_{r['id']}"):
@@ -142,7 +153,9 @@ else:
             new_ord = (
                 supabase.schema("ordering")
                 .table("orders")
-                .insert({"table_id": int(table_id), "total_amount": float(total)})
+                .insert(
+                    {"table_id": int(table_id), "total_amount": float(total)}
+                )
                 .execute()
                 .data[0]
             )
