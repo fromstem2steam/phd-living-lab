@@ -1,1 +1,7 @@
+streamlit
+supabase
+pandas
+plotly
+qrcode
+Pillow
 
