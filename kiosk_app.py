@@ -84,4 +84,3 @@ else:
             st.session_state.active_order_id = new_ord["id"]
             st.session_state.cart = []
             st.rerun()
-
