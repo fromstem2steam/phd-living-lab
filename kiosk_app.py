@@ -1,3 +1,8 @@
+from streamlit_autorefresh import st_autorefresh
+
+# Refresh every 5000 milliseconds (5 seconds)
+st_autorefresh(interval=5000, key="datarefresh")
+
 import streamlit as st
 from supabase import create_client
 
