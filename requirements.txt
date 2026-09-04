@@ -1,7 +1,7 @@
+qrcode
+Pillow
 streamlit
 supabase
 pandas
 plotly
-qrcode
-Pillow
-
+streamlit-autorefresh
