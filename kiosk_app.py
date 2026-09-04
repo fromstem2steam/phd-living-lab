@@ -47,7 +47,8 @@ else:
     tab1, tab2 = st.tabs(["🍽️ Café Menu", "🛍️ In-Stock Retail"])
 
     with tab1:
-        items = supabase.table("menu_items").schema("ordering").select("*").eq("is_available", True).execute().data
+        # Correct
+items = supabase.schema("ordering").table("menu_items").select("*").eq("is_available", True).execute().data
         for i in items:
             c1, c2, c3 = st.columns([3, 1, 1])
             c1.write(f"**{i['name']}** ({i['category']})")
