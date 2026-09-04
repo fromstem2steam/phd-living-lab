@@ -1,3 +1,4 @@
+import uuid
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -12,6 +13,27 @@ def init_supabase():
 
 
 supabase = init_supabase()
+
+
+def upload_image_to_supabase(uploaded_file):
+    if uploaded_file is None:
+        return None
+
+    # Generate a unique file path to prevent overwriting existing files
+    file_ext = uploaded_file.name.split(".")[-1]
+    file_path = f"items/{uuid.uuid4()}.{file_ext}"
+    file_bytes = uploaded_file.getvalue()
+
+    # Upload to 'product-images' bucket
+    supabase.storage.from_("product-images").upload(
+        path=file_path,
+        file=file_bytes,
+        file_options={"content-type": uploaded_file.type},
+    )
+
+    # Retrieve public URL
+    return supabase.storage.from_("product-images").get_public_url(file_path)
+
 
 st.title("⚙️ Living Lab Master Administration")
 
@@ -38,8 +60,21 @@ with tab1:
 
     if items:
         df = pd.DataFrame(items)
+        # Display image_url column if present in dataframe
+        display_cols = [
+            col
+            for col in [
+                "sku",
+                "name",
+                "price",
+                "stock_quantity",
+                "image_url",
+                "is_active",
+            ]
+            if col in df.columns
+        ]
         st.dataframe(
-            df[["sku", "name", "price", "stock_quantity", "is_active"]],
+            df[display_cols],
             use_container_width=True,
         )
 
@@ -82,8 +117,15 @@ with tab1:
             "Price (€)", min_value=0.0, value=12.50, step=0.50
         )
         stock = st.number_input("Initial Stock Quantity", min_value=0, value=20)
+        uploaded_image = st.file_uploader(
+            "Product Image", type=["png", "jpg", "jpeg", "webp"]
+        )
 
         if st.form_submit_button("Save Product") and sku and name:
+            image_url = None
+            if uploaded_image:
+                image_url = upload_image_to_supabase(uploaded_image)
+
             qr_id = f"ITEM-{sku}"
             (
                 supabase.schema("ordering")
@@ -95,11 +137,12 @@ with tab1:
                     "price": price,
                     "stock_quantity": stock,
                     "qr_code_id": qr_id,
+                    "image_url": image_url,
                     "is_active": True,
                 })
                 .execute()
             )
-            st.success(f"Product '{name}' created!")
+            st.success(f"Product '{name}' created with image!")
             st.rerun()
 
 # -------------------------------------------------------------
