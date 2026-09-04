@@ -1,3 +1,5 @@
+pip install streamlit-autorefresh
+
 import streamlit as st
 from supabase import create_client
 from label_generator import generate_lab_label
